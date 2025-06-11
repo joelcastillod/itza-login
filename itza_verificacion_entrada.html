@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acceso ITZA Tequila</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background: black;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="age-check">
+    <h2>¿Eres mayor de 18 años?</h2>
+    <button onclick="verifyAge(true)">Sí</button>
+    <button onclick="verifyAge(false)">No</button>
+  </div>
+
+  <div class="container hidden" id="email-step">
+    <h2>Introduce tu correo electrónico</h2>
+    <input type="email" id="email" placeholder="ejemplo@correo.com" />
+    <button onclick="sendLink()">Enviar código</button>
+  </div>
+
+  <div class="container hidden" id="verify-step">
+    <h2>Introduce el código recibido</h2>
+    <input type="text" id="code" placeholder="Código de verificación" />
+    <button onclick="verifyCode()">Verificar</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
+      authDomain: "itza-verification.firebaseapp.com",
+      projectId: "itza-verification",
+      storageBucket: "itza-verification.firebasestorage.app",
+      messagingSenderId: "1064552266855",
+      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2",
+      measurementId: "G-JW39330WS5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.verifyAge = function(isOldEnough) {
+      if (!isOldEnough) {
+        alert("Lo sentimos, debes ser mayor de 18 años para acceder.");
+        return;
+      }
+      document.getElementById("age-check").classList.add("hidden");
+      document.getElementById("email-step").classList.remove("hidden");
+    }
+
+    window.sendLink = function() {
+      const email = document.getElementById("email").value;
+      const actionCodeSettings = {
+        url: window.location.href,
+        handleCodeInApp: true,
+      };
+
+      sendSignInLinkToEmail(auth, email, actionCodeSettings)
+        .then(() => {
+          window.localStorage.setItem("emailForSignIn", email);
+          alert("Te hemos enviado un correo con el enlace de acceso.");
+          document.getElementById("email-step").classList.add("hidden");
+          document.getElementById("verify-step").classList.remove("hidden");
+        })
+        .catch(error => {
+          alert("Error enviando el correo: " + error.message);
+        });
+    }
+
+    window.verifyCode = function() {
+      const email = window.localStorage.getItem("emailForSignIn");
+      if (isSignInWithEmailLink(auth, window.location.href)) {
+        signInWithEmailLink(auth, email, window.location.href)
+          .then(result => {
+            alert("Bienvenido, acceso concedido.");
+            window.location.href = "https://itzatequila.wordpress.com"; // Redirige al sitio
+          })
+          .catch(error => {
+            alert("Error verificando código: " + error.message);
+          });
+      } else {
+        alert("Este enlace no es válido o ha expirado.");
+      }
+    }
+  </script>
+</body>
+</html>
