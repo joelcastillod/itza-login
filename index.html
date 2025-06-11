@@ -1,34 +1,43 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Acceso ITZA Tequila</title>
+  <title>Access ITZA Tequila</title>
   <style>
     body {
       font-family: 'Helvetica Neue', sans-serif;
-      background: #f4f4f4;
+      background: url('https://itzatequila.files.wordpress.com/2024/11/fondo-itza.jpg') no-repeat center center fixed;
+      background-size: cover;
       margin: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
+      backdrop-filter: blur(4px);
     }
     .container {
-      background: white;
+      background: rgba(255, 255, 255, 0.92);
       padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 20px;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.2);
       max-width: 400px;
       width: 100%;
+      text-align: center;
+      animation: fadeIn 1s ease-out;
+    }
+    .logo {
+      width: 120px;
+      margin-bottom: 20px;
     }
     h2 {
       margin-top: 0;
+      font-size: 22px;
     }
     input, button {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin: 10px 0;
       border-radius: 6px;
       border: 1px solid #ccc;
@@ -39,23 +48,67 @@
       color: white;
       border: none;
       cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #333;
     }
     .hidden {
       display: none;
+    }
+    .welcome-message {
+      display: none;
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      text-align: center;
+      animation: fadeInScale 1.5s ease forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+        border-radius: 12px;
+      }
+      h2 {
+        font-size: 18px;
+      }
+      input, button {
+        font-size: 14px;
+        padding: 10px;
+      }
+      .welcome-message {
+        font-size: 22px;
+        padding: 0 10px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container" id="age-check">
-    <h2>¿Eres mayor de 18 años?</h2>
-    <button onclick="verifyAge(true)">Sí</button>
+    <img class="logo" src="https://itzatequila.files.wordpress.com/2024/11/el-text-del-paragraf-10.png" alt="ITZA Logo" />
+    <h2>Are you over 18?</h2>
+    <button onclick="verifyAge(true)">Yes</button>
     <button onclick="verifyAge(false)">No</button>
   </div>
 
   <div class="container hidden" id="email-step">
-    <h2>Introduce tu correo electrónico</h2>
-    <input type="email" id="email" placeholder="ejemplo@correo.com" />
-    <button onclick="sendLink()">Enviar enlace</button>
+    <img class="logo" src="https://itzatequila.files.wordpress.com/2024/11/el-text-del-paragraf-10.png" alt="ITZA Logo" />
+    <h2>Enter your email address</h2>
+    <input type="email" id="email" placeholder="example@email.com" />
+    <button onclick="sendLink()">Send access link</button>
+  </div>
+
+  <div class="welcome-message" id="welcome-msg">
+    Welcome to ITZA Tequila, your access has been verified!
   </div>
 
   <script type="module">
@@ -75,17 +128,15 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Verificación de edad
     window.verifyAge = function(isOldEnough) {
       if (!isOldEnough) {
-        alert("Lo sentimos, debes ser mayor de 18 años para acceder.");
+        alert("Sorry, you must be over 18 to enter.");
         return;
       }
       document.getElementById("age-check").classList.add("hidden");
       document.getElementById("email-step").classList.remove("hidden");
     };
 
-    // Enviar enlace mágico por correo
     window.sendLink = function() {
       const email = document.getElementById("email").value;
       const actionCodeSettings = {
@@ -96,28 +147,45 @@
       sendSignInLinkToEmail(auth, email, actionCodeSettings)
         .then(() => {
           window.localStorage.setItem("emailForSignIn", email);
-          alert("Te hemos enviado un correo con el enlace de acceso.");
+          alert("We have sent you an access link by email.");
         })
         .catch(error => {
-          alert("Error enviando el correo: " + error.message);
+          alert("Error: " + error.message);
         });
     };
 
-    // Detectar enlace mágico al volver desde el email
     if (isSignInWithEmailLink(auth, window.location.href)) {
       let email = window.localStorage.getItem("emailForSignIn");
       if (!email) {
-        email = window.prompt("Introduce tu correo para completar el acceso:");
+        email = window.prompt("Please enter your email to complete sign-in:");
       }
 
       signInWithEmailLink(auth, email, window.location.href)
         .then((result) => {
-          alert("Verificación correcta. Bienvenido a ITZA Tequila.");
           window.localStorage.removeItem("emailForSignIn");
-          window.location.href = "https://itzatequila.wordpress.com";
+          document.querySelectorAll(".container").forEach(el => el.remove());
+          const welcome = document.getElementById("welcome-msg");
+          welcome.style.display = "block";
+
+          const button = document.createElement("button");
+          button.textContent = "Enter the Website";
+          button.style.padding = "12px 24px";
+          button.style.marginTop = "20px";
+          button.style.fontSize = "16px";
+          button.style.borderRadius = "6px";
+          button.style.border = "none";
+          button.style.cursor = "pointer";
+          button.style.backgroundColor = "black";
+          button.style.color = "white";
+          button.onmouseover = () => button.style.backgroundColor = "#333";
+          button.onmouseout = () => button.style.backgroundColor = "black";
+          button.onclick = () => {
+            window.location.href = "https://itzatequila.wordpress.com";
+          };
+          welcome.appendChild(button);
         })
         .catch((error) => {
-          alert("Hubo un error al verificar el enlace: " + error.message);
+          alert("Verification error: " + error.message);
         });
     }
   </script>
