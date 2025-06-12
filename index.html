@@ -3,98 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ITZA Tequila</title>
-  <link rel="stylesheet" href="style.css"/>
+  <title>ITZA Login</title>
   <style>
-    #age-modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.9);
+    body {
+      margin: 0;
+      background-color: #111;
       color: white;
+      font-family: Georgia, serif;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      z-index: 9999;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      text-align: center;
     }
-    #age-modal input, #age-modal button {
-      margin-top: 10px;
-      padding: 10px;
-      font-size: 1em;
+    .hidden {
+      display: none;
+    }
+    .button {
+      background-color: #fff;
+      color: #000;
+      border: none;
+      padding: 10px 24px;
+      margin: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <!-- Verificación de edad -->
-  <div id="age-modal">
+
+  <!-- Modal de edad -->
+  <div id="age-check">
     <h2>Are you over 18?</h2>
-    <button onclick="askEmail(true)">Yes</button>
-    <button onclick="askEmail(false)">No</button>
-
-    <div id="email-section" style="display:none; margin-top: 20px;">
-      <input type="email" id="email" placeholder="Enter your email" />
-      <button onclick="sendLoginLink()">Send Access Link</button>
-      <p id="msg" style="margin-top:10px;"></p>
-    </div>
+    <button class="button" onclick="confirmAge(true)">Yes</button>
+    <button class="button" onclick="confirmAge(false)">No</button>
   </div>
 
-  <!-- Contenido principal oculto hasta autenticación -->
-  <div id="main-content" style="display:none; text-align:center; padding:60px;">
-    <img src="https://itzatequila.wordpress.com/wp-content/uploads/2025/05/el-text-del-paragraf-9-3.png" alt="ITZA Logo" style="width:120px; margin-bottom:40px;">
-    <button onclick="window.location.href='login.html'">Scan your bottle</button>
+  <!-- Contenido principal oculto hasta confirmar -->
+  <div id="main-content" class="hidden">
+    <h1>Welcome to ITZA</h1>
+    <p>Enjoy responsibly.</p>
+    <a href="dashboard.html" class="button">Scan your bottle</a>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAuth, sendSignInLinkToEmail } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
-      authDomain: "itza-verification.firebaseapp.com",
-      projectId: "itza-verification",
-      storageBucket: "itza-verification.firebasestorage.app",
-      messagingSenderId: "1064552266855",
-      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    window.askEmail = function(isAdult) {
+  <script>
+    function confirmAge(isAdult) {
       if (!isAdult) {
-        alert("Sorry, you must be over 18 to enter.");
+        alert("You must be over 18 to enter.");
         window.location.href = "https://google.com";
-        return;
-      }
-      document.getElementById("email-section").style.display = "block";
-    }
-
-    window.sendLoginLink = async function () {
-      const email = document.getElementById("email").value.trim();
-      const msg = document.getElementById("msg");
-
-      if (!email) {
-        msg.textContent = "Please enter a valid email.";
-        return;
-      }
-
-      const actionCodeSettings = {
-        url: window.location.origin + "/login.html",
-        handleCodeInApp: true
-      };
-
-      try {
-        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-        window.localStorage.setItem("emailForSignIn", email);
-        msg.textContent = "Access link sent to your email.";
-        document.getElementById("age-modal").style.display = "none";
-        document.getElementById("main-content").style.display = "block";
-      } catch (err) {
-        console.error("Error:", err);
-        msg.textContent = "Error sending email: " + err.message;
+      } else {
+        document.getElementById("age-check").classList.add("hidden");
+        document.getElementById("main-content").classList.remove("hidden");
       }
     }
   </script>
+
 </body>
 </html>
