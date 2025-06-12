@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ITZA Login</title>
+  <title>ITZA Access</title>
   <style>
     body {
       margin: 0;
@@ -17,10 +17,7 @@
       flex-direction: column;
       text-align: center;
     }
-    .hidden {
-      display: none;
-    }
-    .button {
+    button {
       background-color: #fff;
       color: #000;
       border: none;
@@ -34,28 +31,18 @@
 </head>
 <body>
 
-  <!-- Modal de edad -->
-  <div id="age-check">
-    <h2>Are you over 18?</h2>
-    <button class="button" onclick="confirmAge(true)">Yes</button>
-    <button class="button" onclick="confirmAge(false)">No</button>
-  </div>
-
-  <!-- Contenido principal oculto hasta confirmar -->
-  <div id="main-content" class="hidden">
-    <h1>Welcome to ITZA</h1>
-    <p>Enjoy responsibly.</p>
-    <a href="dashboard.html" class="button">Scan your bottle</a>
-  </div>
+  <h2>Are you over 18?</h2>
+  <button onclick="confirmAge(true)">Yes</button>
+  <button onclick="confirmAge(false)">No</button>
 
   <script>
     function confirmAge(isAdult) {
-      if (!isAdult) {
-        alert("You must be over 18 to enter.");
-        window.location.href = "https://google.com";
+      if (isAdult) {
+        // Redirigir a tu web de WordPress
+        window.location.href = "https://itzatequila.wordpress.com";
       } else {
-        document.getElementById("age-check").classList.add("hidden");
-        document.getElementById("main-content").classList.remove("hidden");
+        // Redirigir a una web de advertencia o Google
+        window.location.href = "https://www.google.com";
       }
     }
   </script>
