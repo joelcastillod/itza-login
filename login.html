@@ -1,0 +1,69 @@
+<!-- login.html - Pantalla de login con enlace por correo -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | ITZA</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container" id="login-box">
+    <img class="logo" src="https://itzatequila.wordpress.com/wp-content/uploads/2025/05/el-text-del-paragraf-9-3.png" alt="ITZA Logo">
+    <h2>Enter your email to access the bottle scanner</h2>
+    <input type="email" id="email" placeholder="example@email.com">
+    <button onclick="sendLoginLink()">Send login link</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
+      authDomain: "itza-verification.firebaseapp.com",
+      projectId: "itza-verification",
+      storageBucket: "itza-verification.firebasestorage.app",
+      messagingSenderId: "1064552266855",
+      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2",
+      measurementId: "G-JW39330WS5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.sendLoginLink = function () {
+      const email = document.getElementById("email").value;
+      const actionCodeSettings = {
+        url: window.location.origin + '/dashboard.html',
+        handleCodeInApp: true
+      };
+
+      sendSignInLinkToEmail(auth, email, actionCodeSettings)
+        .then(() => {
+          window.localStorage.setItem("emailForSignIn", email);
+          alert("Check your email for the login link.");
+        })
+        .catch(error => {
+          alert("Error: " + error.message);
+        });
+    };
+
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      let email = window.localStorage.getItem("emailForSignIn");
+      if (!email) {
+        email = window.prompt("Please enter your email:");
+      }
+
+      signInWithEmailLink(auth, email, window.location.href)
+        .then(() => {
+          window.localStorage.removeItem("emailForSignIn");
+          window.location.href = "/dashboard.html";
+        })
+        .catch(error => {
+          alert("Login failed: " + error.message);
+        });
+    }
+  </script>
+</body>
+</html>
