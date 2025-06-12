@@ -1,0 +1,72 @@
+<!-- dashboard.html - Zona de usuario para ingresar códigos y acumular tokens -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Tokens | ITZA</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container" id="dashboard">
+    <img class="logo" src="https://itzatequila.wordpress.com/wp-content/uploads/2025/05/el-text-del-paragraf-9-3.png" alt="ITZA Logo">
+    <h2>Enter your bottle code</h2>
+    <input type="text" id="codeInput" placeholder="Enter code here">
+    <button onclick="submitCode()">Add Token</button>
+    <p id="token-count">You have 0 tokens.</p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
+      authDomain: "itza-verification.firebaseapp.com",
+      projectId: "itza-verification",
+      storageBucket: "itza-verification.firebasestorage.app",
+      messagingSenderId: "1064552266855",
+      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2",
+      measurementId: "G-JW39330WS5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        const ref = doc(db, "users", user.uid);
+        const docSnap = await getDoc(ref);
+
+        if (!docSnap.exists()) {
+          await setDoc(ref, { tokens: 0 });
+          document.getElementById("token-count").textContent = "You have 0 tokens.";
+        } else {
+          const data = docSnap.data();
+          document.getElementById("token-count").textContent = `You have ${data.tokens} tokens.`;
+        }
+      } else {
+        window.location.href = "/login.html";
+      }
+    });
+
+    window.submitCode = async function () {
+      const code = document.getElementById("codeInput").value.trim();
+      if (!code || !currentUser) return alert("Invalid code or user not authenticated.");
+
+      const ref = doc(db, "users", currentUser.uid);
+      await updateDoc(ref, { tokens: increment(1) });
+
+      const updatedSnap = await getDoc(ref);
+      const data = updatedSnap.data();
+      document.getElementById("token-count").textContent = `You have ${data.tokens} tokens.`;
+      document.getElementById("codeInput").value = "";
+    }
+  </script>
+</body>
+</html>
