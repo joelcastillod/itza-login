@@ -1,18 +1,19 @@
-<!-- login.html - Pantalla de login con enlace por correo -->
+<!-- login.html - Página de login con email link -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login | ITZA</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container" id="login-box">
-    <img class="logo" src="https://itzatequila.wordpress.com/wp-content/uploads/2025/05/el-text-del-paragraf-9-3.png" alt="ITZA Logo">
-    <h2>Enter your email to access the bottle scanner</h2>
-    <input type="email" id="email" placeholder="example@email.com">
-    <button onclick="sendLoginLink()">Send login link</button>
+  <div class="container" style="text-align: center; padding: 60px;">
+    <img src="https://itzatequila.wordpress.com/wp-content/uploads/2025/05/el-text-del-paragraf-9-3.png" alt="ITZA Logo" style="width: 120px; margin-bottom: 40px;">
+    <h2>Enter your email to continue</h2>
+    <input type="email" id="email" placeholder="Enter your email" />
+    <button id="sendLinkBtn">Send Access Link</button>
+    <p id="message" style="margin-top: 20px;"></p>
   </div>
 
   <script type="module">
@@ -25,43 +26,53 @@
       projectId: "itza-verification",
       storageBucket: "itza-verification.firebasestorage.app",
       messagingSenderId: "1064552266855",
-      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2",
-      measurementId: "G-JW39330WS5"
+      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    window.sendLoginLink = function () {
-      const email = document.getElementById("email").value;
+    const emailInput = document.getElementById("email");
+    const messageEl = document.getElementById("message");
+    const sendBtn = document.getElementById("sendLinkBtn");
+
+    sendBtn.addEventListener("click", async () => {
+      const email = emailInput.value.trim();
+      if (!email) {
+        messageEl.textContent = "Please enter a valid email.";
+        return;
+      }
+
       const actionCodeSettings = {
-        url: window.location.origin + '/dashboard.html',
+        url: window.location.href,
         handleCodeInApp: true
       };
 
-      sendSignInLinkToEmail(auth, email, actionCodeSettings)
-        .then(() => {
-          window.localStorage.setItem("emailForSignIn", email);
-          alert("Check your email for the login link.");
-        })
-        .catch(error => {
-          alert("Error: " + error.message);
-        });
-    };
+      try {
+        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+        window.localStorage.setItem("emailForSignIn", email);
+        messageEl.textContent = "Check your inbox for the login link.";
+      } catch (error) {
+        console.error("Error sending email:", error);
+        messageEl.textContent = "Error sending email: " + error.message;
+      }
+    });
 
+    // Verificar si llegó desde el email link
     if (isSignInWithEmailLink(auth, window.location.href)) {
       let email = window.localStorage.getItem("emailForSignIn");
       if (!email) {
-        email = window.prompt("Please enter your email:");
+        email = window.prompt("Please enter your email to confirm sign in");
       }
 
       signInWithEmailLink(auth, email, window.location.href)
-        .then(() => {
+        .then((result) => {
           window.localStorage.removeItem("emailForSignIn");
-          window.location.href = "/dashboard.html";
+          window.location.href = "dashboard.html";
         })
-        .catch(error => {
-          alert("Login failed: " + error.message);
+        .catch((error) => {
+          console.error("Login error:", error);
+          messageEl.textContent = "Login failed: " + error.message;
         });
     }
   </script>
