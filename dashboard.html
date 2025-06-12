@@ -1,26 +1,27 @@
-<!-- dashboard.html - Zona de usuario para ingresar códigos y acumular tokens -->
+<!-- dashboard.html - Dashboard principal tras login -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Tokens | ITZA</title>
+  <title>Dashboard | ITZA</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container" id="dashboard">
-    <img class="logo" src="https://itzatequila.wordpress.com/wp-content/uploads/2025/05/el-text-del-paragraf-9-3.png" alt="ITZA Logo">
-    <h2>Enter your bottle code</h2>
-    <input type="text" id="codeInput" placeholder="Enter code here">
-    <button onclick="submitCode()">Add Token</button>
-    <p id="token-count">You have 0 tokens.</p>
-    <button onclick="window.location.href='profile.html'">Go to Profile</button>
+  <div class="container" style="text-align:center; padding:60px;">
+    <img class="logo" src="https://itzatequila.wordpress.com/wp-content/uploads/2025/05/el-text-del-paragraf-9-3.png" alt="ITZA Logo" style="width:120px; margin-bottom:40px;">
+    <h2>Welcome back!</h2>
+    <p>Use your code below to add tokens:</p>
+    <input type="text" id="code-input" placeholder="Enter code" />
+    <button onclick="submitCode()">Submit</button>
+    <p style="margin-top:20px;">You have <strong id="token-count">0</strong> tokens.</p>
+    <button onclick="logout()">Logout</button>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
@@ -28,45 +29,60 @@
       projectId: "itza-verification",
       storageBucket: "itza-verification.firebasestorage.app",
       messagingSenderId: "1064552266855",
-      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2",
-      measurementId: "G-JW39330WS5"
+      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let currentUser = null;
+    let currentUser;
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
-        const ref = doc(db, "users", user.uid);
-        const docSnap = await getDoc(ref);
-
-        if (!docSnap.exists()) {
-          await setDoc(ref, { tokens: 0 });
-          document.getElementById("token-count").textContent = "You have 0 tokens.";
-        } else {
-          const data = docSnap.data();
-          document.getElementById("token-count").textContent = `You have ${data.tokens} tokens.`;
+        const userRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) {
+          document.getElementById("token-count").textContent = docSnap.data().tokens || 0;
         }
       } else {
-        window.location.href = "/login.html";
+        window.location.href = "login.html";
       }
     });
 
     window.submitCode = async function () {
-      const code = document.getElementById("codeInput").value.trim();
-      if (!code || !currentUser) return alert("Invalid code or user not authenticated.");
+      const code = document.getElementById("code-input").value.trim();
+      if (!code) return;
 
-      const ref = doc(db, "users", currentUser.uid);
-      await updateDoc(ref, { tokens: increment(1) });
+      const validCodes = ["ITZA123", "VIP2025", "TEQUILA"];
+      if (!validCodes.includes(code)) {
+        alert("Invalid code.");
+        return;
+      }
 
-      const updatedSnap = await getDoc(ref);
-      const data = updatedSnap.data();
-      document.getElementById("token-count").textContent = `You have ${data.tokens} tokens.`;
-      document.getElementById("codeInput").value = "";
+      try {
+        const userRef = doc(db, "users", currentUser.uid);
+        await updateDoc(userRef, {
+          tokens: increment(1)
+        });
+        const updatedSnap = await getDoc(userRef);
+        document.getElementById("token-count").textContent = updatedSnap.data().tokens;
+        alert("Token added successfully!");
+      } catch (error) {
+        console.error("Token error:", error);
+        alert("Failed to add token.");
+      }
+    }
+
+    window.logout = async function () {
+      try {
+        await signOut(auth);
+        window.location.href = "https://itzatequila.com";
+      } catch (error) {
+        console.error("Logout error:", error);
+        alert("Failed to logout. Please try again.");
+      }
     }
   </script>
 </body>
