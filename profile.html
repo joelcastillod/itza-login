@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Profile | ITZA</title>
-  <link rel="stylesheet" href="style.css">
   <style>
     body {
       background-color: #111;
@@ -13,10 +12,12 @@
       margin: 0;
       text-align: center;
     }
+
     .container {
-      display: none; /* oculto hasta verificar login */
+      display: none;
       padding: 60px;
     }
+
     button {
       background-color: #D4AF37;
       color: #000;
@@ -28,6 +29,14 @@
       cursor: pointer;
       margin-top: 20px;
     }
+
+    input {
+      padding: 10px;
+      border-radius: 4px;
+      border: none;
+      width: 220px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -36,19 +45,29 @@
     <img class="logo" src="https://itzatequila.wordpress.com/wp-content/uploads/2025/05/el-text-del-paragraf-9-3.png" alt="ITZA Logo" style="width:120px; margin-bottom:40px;">
     <h2>Welcome, <span id="user-email"></span></h2>
     <p>You have <strong id="token-count">0</strong> tokens.</p>
+
+    <!-- REDEEM CODE SECTION -->
+    <div style="margin-top: 40px;">
+      <p>Have a bottle code? Redeem it here:</p>
+      <input type="text" id="bottle-code" placeholder="Enter your code" />
+      <br>
+      <button onclick="redeemCode()">Redeem Code</button>
+      <p id="redeem-status" style="margin-top: 10px;"></p>
+    </div>
+
     <button onclick="logout()">Logout</button>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
       authDomain: "itza-verification.firebaseapp.com",
       projectId: "itza-verification",
-      storageBucket: "itza-verification.appspot.com", // corregido aquí
+      storageBucket: "itza-verification.appspot.com",
       messagingSenderId: "1064552266855",
       appId: "1:1064552266855:web:21baba8a21883e12d1a8c2"
     };
@@ -63,20 +82,63 @@
         return;
       }
 
-      // Mostrar contenedor
       document.getElementById("profile-container").style.display = "block";
       document.getElementById("user-email").textContent = user.email;
 
       try {
         const userRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(userRef);
-        const data = docSnap.exists() ? docSnap.data() : {};
+        const userSnap = await getDoc(userRef);
+        const data = userSnap.exists() ? userSnap.data() : {};
         document.getElementById("token-count").textContent = data.tokens ?? 0;
       } catch (err) {
         console.error("Error fetching tokens:", err);
-        document.getElementById("token-count").textContent = "0";
       }
     });
+
+    window.redeemCode = async () => {
+      const codeInput = document.getElementById("bottle-code");
+      const status = document.getElementById("redeem-status");
+      const code = codeInput.value.trim().toUpperCase();
+      if (code !== "ITZA_001") {
+        status.textContent = "❌ Invalid code.";
+        return;
+      }
+
+      const user = auth.currentUser;
+      if (!user) {
+        status.textContent = "❌ User not logged in.";
+        return;
+      }
+
+      try {
+        const codeRef = doc(db, "codes", code);
+        const codeSnap = await getDoc(codeRef);
+
+        if (codeSnap.exists() && codeSnap.data().used) {
+          status.textContent = "❌ This code has already been used.";
+          return;
+        }
+
+        await setDoc(codeRef, {
+          used: true,
+          usedBy: user.uid,
+          timestamp: new Date()
+        });
+
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        const currentTokens = userSnap.exists() ? (userSnap.data().tokens || 0) : 0;
+
+        await setDoc(userRef, { tokens: currentTokens + 1 }, { merge: true });
+
+        document.getElementById("token-count").textContent = currentTokens + 1;
+        status.textContent = "✅ Code redeemed! You've earned 1 token.";
+        codeInput.value = "";
+      } catch (err) {
+        console.error("Redemption error:", err);
+        status.textContent = "⚠️ An error occurred. Try again.";
+      }
+    };
 
     window.logout = async () => {
       try {
@@ -84,7 +146,6 @@
         window.location.href = "https://itzatequila.com";
       } catch (err) {
         alert("Logout failed. Please try again.");
-        console.error(err);
       }
     };
   </script>
