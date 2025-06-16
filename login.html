@@ -3,97 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login | ITZA</title>
+  <title>ITZA Access</title>
   <style>
     body {
-      background-color: #000;
-      color: #fff;
+      margin: 0;
+      background-color: #111;
+      color: white;
       font-family: Georgia, serif;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
-      margin: 0;
+      flex-direction: column;
       text-align: center;
     }
-    input, button {
-      padding: 12px;
-      margin: 10px;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-    input {
-      width: 280px;
-    }
     button {
-      background-color: #D4AF37;
+      background-color: #fff;
       color: #000;
+      border: none;
+      padding: 10px 24px;
+      margin: 10px;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h2>Welcome to ITZA</h2>
-  <p>Enter your email to access exclusive content</p>
-  <input type="email" id="email" placeholder="Your email" />
-  <button id="loginButton" onclick="sendLoginLink()">Continue</button>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
+  <h2>Are you over 18?</h2>
+  <button onclick="confirmAge(true)">Yes</button>
+  <button onclick="confirmAge(false)">No</button>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
-      authDomain: "itza-verification.firebaseapp.com",
-      projectId: "itza-verification",
-      storageBucket: "itza-verification.appspot.com",
-      messagingSenderId: "1064552266855",
-      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2"
-    };
+  <script>
+    function confirmAge(isAdult) {
+      if (isAdult) {
+        // Guardar validación (opcional)
+        localStorage.setItem("isAdult", "true");
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    const actionCodeSettings = {
-      url: "https://itza-login.vercel.app/login.html",
-      handleCodeInApp: true
-    };
-
-    // Procesar login si el link viene en la URL
-    if (isSignInWithEmailLink(auth, window.location.href)) {
-      const email = localStorage.getItem('emailForSignIn') || prompt('Enter your email again to confirm:');
-      signInWithEmailLink(auth, email, window.location.href)
-        .then(() => {
-          localStorage.removeItem('emailForSignIn');
-          alert("Successfully signed in!");
-          window.location.href = "profile.html"; // Redirige tras login
-        })
-        .catch((error) => {
-          alert("Sign-in error: " + error.message);
-        });
+        // Redirigir a la página principal
+        window.location.href = "https://itzatequila.wordpress.com";
+      } else {
+        // Redirigir a Google o a una página de advertencia
+        window.location.href = "https://www.google.com";
+      }
     }
-
-    // Enviar enlace de acceso por correo
-    window.sendLoginLink = () => {
-      const email = document.getElementById('email').value;
-      const btn = document.getElementById('loginButton');
-      btn.disabled = true;
-      btn.innerText = "Sending...";
-      
-      sendSignInLinkToEmail(auth, email, actionCodeSettings)
-        .then(() => {
-          localStorage.setItem('emailForSignIn', email);
-          alert("Check your inbox to complete sign-in.");
-        })
-        .catch((error) => {
-          alert("Error: " + error.message);
-          btn.disabled = false;
-          btn.innerText = "Continue";
-        });
-    };
   </script>
+
 </body>
 </html>
