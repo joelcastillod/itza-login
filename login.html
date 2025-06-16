@@ -39,7 +39,7 @@
   <h2>Welcome to ITZA</h2>
   <p>Enter your email to access exclusive content</p>
   <input type="email" id="email" placeholder="Your email" />
-  <button onclick="sendLoginLink()">Continue</button>
+  <button id="loginButton" onclick="sendLoginLink()">Continue</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
@@ -58,34 +58,40 @@
     const auth = getAuth(app);
 
     const actionCodeSettings = {
-      url: "https://itza-login.vercel.app",
+      url: "https://itza-login.vercel.app/login.html",
       handleCodeInApp: true
     };
 
-    // Detect sign-in link in URL
+    // Procesar login si el link viene en la URL
     if (isSignInWithEmailLink(auth, window.location.href)) {
-      const email = window.localStorage.getItem('emailForSignIn') || window.prompt('Enter your email again to confirm:');
+      const email = localStorage.getItem('emailForSignIn') || prompt('Enter your email again to confirm:');
       signInWithEmailLink(auth, email, window.location.href)
-        .then((result) => {
-          window.localStorage.removeItem('emailForSignIn');
+        .then(() => {
+          localStorage.removeItem('emailForSignIn');
           alert("Successfully signed in!");
-          // Redirigir a otra página si lo deseas
+          window.location.href = "profile.html"; // Redirige tras login
         })
         .catch((error) => {
           alert("Sign-in error: " + error.message);
         });
     }
 
-    // Send login link
+    // Enviar enlace de acceso por correo
     window.sendLoginLink = () => {
       const email = document.getElementById('email').value;
+      const btn = document.getElementById('loginButton');
+      btn.disabled = true;
+      btn.innerText = "Sending...";
+      
       sendSignInLinkToEmail(auth, email, actionCodeSettings)
         .then(() => {
-          window.localStorage.setItem('emailForSignIn', email);
-          alert("Check your email for the sign-in link.");
+          localStorage.setItem('emailForSignIn', email);
+          alert("Check your inbox to complete sign-in.");
         })
         .catch((error) => {
           alert("Error: " + error.message);
+          btn.disabled = false;
+          btn.innerText = "Continue";
         });
     };
   </script>
