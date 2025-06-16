@@ -1,4 +1,3 @@
-<!-- profile.html - Página de perfil de usuario con información de tokens y logout -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,9 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Profile | ITZA</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Georgia, serif;
+      margin: 0;
+      text-align: center;
+    }
+    .container {
+      display: none; /* oculto hasta verificar login */
+      padding: 60px;
+    }
+    button {
+      background-color: #D4AF37;
+      color: #000;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-  <div class="container" style="text-align:center; padding:60px;">
+
+  <div class="container" id="profile-container">
     <img class="logo" src="https://itzatequila.wordpress.com/wp-content/uploads/2025/05/el-text-del-paragraf-9-3.png" alt="ITZA Logo" style="width:120px; margin-bottom:40px;">
     <h2>Welcome, <span id="user-email"></span></h2>
     <p>You have <strong id="token-count">0</strong> tokens.</p>
@@ -24,7 +48,7 @@
       apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
       authDomain: "itza-verification.firebaseapp.com",
       projectId: "itza-verification",
-      storageBucket: "itza-verification.firebasestorage.app",
+      storageBucket: "itza-verification.appspot.com", // corregido aquí
       messagingSenderId: "1064552266855",
       appId: "1:1064552266855:web:21baba8a21883e12d1a8c2"
     };
@@ -34,27 +58,35 @@
     const db = getFirestore(app);
 
     onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        document.getElementById("user-email").textContent = user.email;
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      // Mostrar contenedor
+      document.getElementById("profile-container").style.display = "block";
+      document.getElementById("user-email").textContent = user.email;
+
+      try {
         const userRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(userRef);
-        if (docSnap.exists()) {
-          document.getElementById("token-count").textContent = docSnap.data().tokens || 0;
-        }
-      } else {
-        window.location.href = "login.html";
+        const data = docSnap.exists() ? docSnap.data() : {};
+        document.getElementById("token-count").textContent = data.tokens ?? 0;
+      } catch (err) {
+        console.error("Error fetching tokens:", err);
+        document.getElementById("token-count").textContent = "0";
       }
     });
 
-    window.logout = async function () {
+    window.logout = async () => {
       try {
         await signOut(auth);
         window.location.href = "https://itzatequila.com";
-      } catch (error) {
-        console.error("Logout error:", error);
-        alert("Failed to logout. Please try again.");
+      } catch (err) {
+        alert("Logout failed. Please try again.");
+        console.error(err);
       }
-    }
+    };
   </script>
 </body>
 </html>
