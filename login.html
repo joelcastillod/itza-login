@@ -23,13 +23,13 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
 
-    // Configuración para el enlace de acceso
+    // Configuración del enlace mágico
     const actionCodeSettings = {
-      url: "https://itzatequila.wordpress.com",
+      url: "https://itza-login.vercel.app/login.html",  // ✅ importante: debe coincidir con la URL de origen del login
       handleCodeInApp: true
     };
 
-    // Enviar enlace de acceso
+    // Función para enviar el enlace de acceso
     window.sendAccessLink = async function () {
       const email = document.getElementById("email").value;
       if (!email) return alert("Please enter a valid email.");
@@ -42,7 +42,7 @@
       }
     };
 
-    // Autenticación desde el enlace recibido
+    // Función para procesar el acceso desde el enlace
     window.onload = async function () {
       if (isSignInWithEmailLink(auth, window.location.href)) {
         let email = window.localStorage.getItem("emailForSignIn");
@@ -52,7 +52,7 @@
         try {
           await signInWithEmailLink(auth, email, window.location.href);
           window.localStorage.removeItem("emailForSignIn");
-          window.location.href = "https://itzatequila.wordpress.com";
+          window.location.href = "/dashboard.html"; // ✅ redirige al dashboard
         } catch (error) {
           alert("Login failed: " + error.message);
         }
