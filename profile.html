@@ -42,8 +42,17 @@
       margin-top: 10px;
       font-size: 15px;
     }
+
+    #qr-reader {
+      width: 300px;
+      margin: 30px auto 0 auto;
+    }
   </style>
+
+  <!-- Librería del escáner QR -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
+
 <body>
 
   <div class="container" id="profile-container">
@@ -51,13 +60,19 @@
     <h2>Welcome, <span id="user-email"></span></h2>
     <p>You have <strong id="token-count">0</strong> tokens.</p>
 
-    <!-- REDEEM CODE SECTION -->
+    <!-- Campo manual -->
     <div style="margin-top: 40px;">
       <p>Have a bottle code? Redeem it here:</p>
       <input type="text" id="bottle-code" placeholder="Enter your code" />
       <br>
       <button onclick="redeemCode()">Redeem Code</button>
       <p id="redeem-status"></p>
+    </div>
+
+    <!-- QR -->
+    <div style="margin-top: 40px;">
+      <p>Or scan your bottle QR code:</p>
+      <div id="qr-reader"></div>
     </div>
 
     <button onclick="logout()">Logout</button>
@@ -81,7 +96,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Verificar autenticación y mostrar tokens
+    // Mostrar perfil solo si está logueado
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -91,17 +106,15 @@
       document.getElementById("profile-container").style.display = "block";
       document.getElementById("user-email").textContent = user.email;
 
-      try {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        const data = userSnap.exists() ? userSnap.data() : {};
-        document.getElementById("token-count").textContent = data.tokens ?? 0;
-      } catch (err) {
-        console.error("Error fetching tokens:", err);
-      }
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      const data = userSnap.exists() ? userSnap.data() : {};
+      document.getElementById("token-count").textContent = data.tokens ?? 0;
+
+      startQRScanner(); // activar escáner
     });
 
-    // Redimir código (siempre válido y reutilizable)
+    // Función para canjear código manual o QR
     window.redeemCode = async () => {
       const codeInput = document.getElementById("bottle-code");
       const status = document.getElementById("redeem-status");
@@ -134,6 +147,29 @@
       }
     };
 
+    // Escáner QR (usa cámara trasera)
+    function startQRScanner() {
+      const qrScanner = new Html5Qrcode("qr-reader");
+      const config = { fps: 10, qrbox: 250 };
+
+      qrScanner.start(
+        { facingMode: "environment" },
+        config,
+        async (decodedText) => {
+          qrScanner.stop(); // detener escáner al capturar
+          document.getElementById("bottle-code").value = decodedText;
+          await redeemCode();
+        },
+        (errorMessage) => {
+          // errores de lectura ignorados
+        }
+      ).catch(err => {
+        console.error("QR scanner error:", err);
+        document.getElementById("qr-reader").innerHTML =
+          "<p style='color:red'>Camera access denied or unavailable.</p>";
+      });
+    }
+
     // Logout
     window.logout = async () => {
       try {
@@ -141,7 +177,6 @@
         window.location.href = "https://itzatequila.com";
       } catch (err) {
         alert("Logout failed. Please try again.");
-        console.error(err);
       }
     };
   </script>
