@@ -1,82 +1,48 @@
-<!-- scanner.html - Escáner QR con vibración al escanear -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scan Bottle | ITZA</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
-    <img class="logo" src="https://itzatequila.wordpress.com/wp-content/uploads/2025/05/el-text-del-paragraf-9-3.png" alt="ITZA Logo">
-    <h2>Scan your bottle QR code</h2>
-    <video id="video" width="100%" style="border-radius: 12px;"></video>
-    <p id="status">Initializing camera...</p>
-    <button onclick="window.location.href='dashboard.html'">Go to Dashboard</button>
-  </div>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scan Your Bottle – ITZA</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #111;
+      color: white;
+      font-family: Georgia, serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    button {
+      background-color: #fff;
+      color: #000;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+  </style>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-    import QrScanner from "https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
-      authDomain: "itza-verification.firebaseapp.com",
-      projectId: "itza-verification",
-      storageBucket: "itza-verification.firebasestorage.app",
-      messagingSenderId: "1064552266855",
-      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2",
-      measurementId: "G-JW39330WS5"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const video = document.getElementById("video");
-    const status = document.getElementById("status");
-
-    let currentUser = null;
-    let scanner = null;
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "/login.html";
-        return;
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const isAdult = localStorage.getItem("isAdult") === "true";
+      if (!isAdult) {
+        window.location.href = "index.html";
       }
-      currentUser = user;
-
-      scanner = new QrScanner(video, async result => {
-        scanner.stop();
-        status.textContent = "Code scanned: " + result;
-
-        // Vibración del dispositivo
-        if (navigator.vibrate) {
-          navigator.vibrate([100, 50, 100]); // patrón de vibración
-        }
-
-        const ref = doc(db, "users", currentUser.uid);
-        await updateDoc(ref, { tokens: increment(1) });
-
-        const snap = await getDoc(ref);
-        const data = snap.data();
-        status.textContent = `Token added! You now have ${data.tokens} tokens.`;
-
-        setTimeout(() => {
-          status.textContent = "Ready to scan another code...";
-          scanner.start();
-        }, 3000);
-      });
-
-      scanner.start().then(() => {
-        status.textContent = "Ready to scan.";
-      }).catch(err => {
-        status.textContent = "Camera access denied or unavailable.";
-      });
     });
   </script>
+</head>
+
+<body>
+  <h1>Scan Your Bottle</h1>
+  <p>Start the authentication process by logging in.</p>
+  <button onclick="window.location.href='login.html'">Log In to Continue</button>
 </body>
 </html>
