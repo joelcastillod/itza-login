@@ -28,24 +28,29 @@
       font-weight: bold;
     }
   </style>
-</head>
-<body>
-
-  <h2>Are you over 18?</h2>
-  <button onclick="confirmAge(true)">Yes</button>
-  <button onclick="confirmAge(false)">No</button>
 
   <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const isAdult = localStorage.getItem("isAdult") === "true";
+      if (isAdult) {
+        window.location.href = "dashboard.html"; // o "scanner.html" o "login.html"
+      }
+    });
+
     function confirmAge(isAdult) {
       if (isAdult) {
-        // Redirigir a tu web de WordPress
-        window.location.href = "https://itzatequila.wordpress.com";
+        localStorage.setItem("isAdult", "true");
+        window.location.href = "dashboard.html"; // cambiar a la ruta de destino real
       } else {
-        // Redirigir a una web de advertencia o Google
         window.location.href = "https://www.google.com";
       }
     }
   </script>
+</head>
 
+<body>
+  <h2>Are you over 18?</h2>
+  <button onclick="confirmAge(true)">Yes</button>
+  <button onclick="confirmAge(false)">No</button>
 </body>
 </html>
