@@ -28,26 +28,24 @@
       font-weight: bold;
     }
   </style>
-
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const isAdult = localStorage.getItem("isAdult") === "true";
+    document.addEventListener('DOMContentLoaded', () => {
+      const isAdult = localStorage.getItem('isAdult') === 'true';
       if (isAdult) {
-        window.location.href = "dashboard.html"; // o "scanner.html" o "login.html"
+        window.location.href = 'https://itzatequila.wordpress.com';
       }
     });
 
     function confirmAge(isAdult) {
       if (isAdult) {
-        localStorage.setItem("isAdult", "true");
-        window.location.href = "dashboard.html"; // cambiar a la ruta de destino real
+        localStorage.setItem('isAdult', 'true');
+        window.location.href = 'https://itzatequila.wordpress.com';
       } else {
-        window.location.href = "https://www.google.com";
+        window.location.href = 'https://www.google.com';
       }
     }
   </script>
 </head>
-
 <body>
   <h2>Are you over 18?</h2>
   <button onclick="confirmAge(true)">Yes</button>
