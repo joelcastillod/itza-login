@@ -38,15 +38,18 @@
 <body>
   <h2>Enter your email to access</h2>
   <input type="email" id="email" placeholder="Enter your email" required />
-  <button onclick="sendLoginLink()">Send Access Link</button>
+  <button id="sendLink">Send Access Link</button>
 
-  <!-- Firebase -->
+  <!-- Firebase script -->
   <script type="module">
-    // Import Firebase SDKs
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getAuth,
+      sendSignInLinkToEmail,
+      isSignInWithEmailLink,
+      signInWithEmailLink
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    // Tu configuración de Firebase (verificada en tu consola)
     const firebaseConfig = {
       apiKey: "AIzaSyBS8JyekLyfX7Vy8uL2KLt6YgEyQaZY04",
       authDomain: "itza-verification.firebaseapp.com",
@@ -57,47 +60,42 @@
       measurementId: "G-JW9338W5S5"
     };
 
-    // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
 
-    // Enviar enlace mágico
-    function sendLoginLink() {
+    // Evento para enviar el enlace
+    document.getElementById("sendLink").addEventListener("click", async () => {
       const email = document.getElementById("email").value;
-
       const actionCodeSettings = {
         url: "https://itza-login.vercel.app",
         handleCodeInApp: true
       };
 
-      sendSignInLinkToEmail(auth, email, actionCodeSettings)
-        .then(() => {
-          window.localStorage.setItem("emailForSignIn", email);
-          alert("We’ve sent you an access link to your email.");
-        })
-        .catch((error) => {
-          console.error("Error sending email:", error);
-          alert("Error: " + error.message);
-        });
-    }
+      try {
+        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+        window.localStorage.setItem("emailForSignIn", email);
+        alert("Access link sent to your email.");
+      } catch (error) {
+        console.error("Error sending access link:", error.message);
+        alert("Error: " + error.message);
+      }
+    });
 
-    // Procesar redirección tras clic en el email
+    // Validar si el usuario viene desde el email
     if (isSignInWithEmailLink(auth, window.location.href)) {
       let email = window.localStorage.getItem("emailForSignIn");
       if (!email) {
-        email = window.prompt("Confirm your email to complete sign-in:");
+        email = window.prompt("Confirm your email to complete login:");
       }
 
-      signInWithEmailLink(auth, email, window.location.href)
-        .then(() => {
-          window.localStorage.removeItem("emailForSignIn");
-          // Redirigir a la página principal
-          window.location.href = "https://itzatequila.wordpress.com";
-        })
-        .catch((error) => {
-          console.error("Error during sign-in:", error);
-          alert("Login failed: " + error.message);
-        });
+      try {
+        await signInWithEmailLink(auth, email, window.location.href);
+        window.localStorage.removeItem("emailForSignIn");
+        window.location.href = "https://itzatequila.wordpress.com";
+      } catch (error) {
+        console.error("Error during login:", error.message);
+        alert("Login failed: " + error.message);
+      }
     }
   </script>
 </body>
