@@ -4,11 +4,67 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ITZA Login</title>
+  <script type="module">
+    // Importar Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
+      authDomain: "itza-verification.firebaseapp.com",
+      projectId: "itza-verification",
+      storageBucket: "itza-verification.appspot.com",
+      messagingSenderId: "1064552266855",
+      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2",
+      measurementId: "G-JW39330WS5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+
+    // Configuración para el enlace de acceso
+    const actionCodeSettings = {
+      url: "https://itzatequila.wordpress.com",
+      handleCodeInApp: true
+    };
+
+    // Enviar enlace de acceso
+    window.sendAccessLink = async function () {
+      const email = document.getElementById("email").value;
+      if (!email) return alert("Please enter a valid email.");
+      try {
+        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+        window.localStorage.setItem("emailForSignIn", email);
+        alert("Access link sent. Please check your email.");
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    };
+
+    // Autenticación desde el enlace recibido
+    window.onload = async function () {
+      if (isSignInWithEmailLink(auth, window.location.href)) {
+        let email = window.localStorage.getItem("emailForSignIn");
+        if (!email) {
+          email = window.prompt("Please enter your email again to confirm:");
+        }
+        try {
+          await signInWithEmailLink(auth, email, window.location.href);
+          window.localStorage.removeItem("emailForSignIn");
+          window.location.href = "https://itzatequila.wordpress.com";
+        } catch (error) {
+          alert("Login failed: " + error.message);
+        }
+      }
+    };
+  </script>
+
   <style>
     body {
-      background-color: #121212;
+      background-color: #111;
       color: white;
-      font-family: 'Helvetica Neue', sans-serif;
+      font-family: Georgia, serif;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -16,87 +72,40 @@
       height: 100vh;
       margin: 0;
     }
-    input, button {
-      padding: 12px 16px;
-      margin: 10px 0;
-      border-radius: 30px;
-      border: none;
-      font-size: 16px;
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
     }
+
     input {
-      width: 300px;
-      max-width: 90%;
+      padding: 12px;
+      font-size: 16px;
+      width: 280px;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 20px;
     }
+
     button {
-      background-color: #5e4b3c;
+      padding: 12px 30px;
+      background-color: #5A4531;
       color: white;
+      border: none;
+      border-radius: 30px;
       font-weight: bold;
       cursor: pointer;
     }
+
+    button:hover {
+      background-color: #3e2f22;
+    }
   </style>
 </head>
+
 <body>
-  <h2>Enter your email to access</h2>
+  <h1>Access ITZA</h1>
   <input type="email" id="email" placeholder="Enter your email" required />
-  <button id="sendLink">Send Access Link</button>
-
-  <!-- Firebase script -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getAuth,
-      sendSignInLinkToEmail,
-      isSignInWithEmailLink,
-      signInWithEmailLink
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBS8JyekLyfX7Vy8uL2KLt6YgEyQaZY04",
-      authDomain: "itza-verification.firebaseapp.com",
-      projectId: "itza-verification",
-      storageBucket: "itza-verification.appspot.com",
-      messagingSenderId: "1064552266855",
-      appId: "1:1064552266855:web:21baba8a21883e12d1a8c2",
-      measurementId: "G-JW9338W5S5"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth();
-
-    // Evento para enviar el enlace
-    document.getElementById("sendLink").addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const actionCodeSettings = {
-        url: "https://itza-login.vercel.app",
-        handleCodeInApp: true
-      };
-
-      try {
-        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-        window.localStorage.setItem("emailForSignIn", email);
-        alert("Access link sent to your email.");
-      } catch (error) {
-        console.error("Error sending access link:", error.message);
-        alert("Error: " + error.message);
-      }
-    });
-
-    // Validar si el usuario viene desde el email
-    if (isSignInWithEmailLink(auth, window.location.href)) {
-      let email = window.localStorage.getItem("emailForSignIn");
-      if (!email) {
-        email = window.prompt("Confirm your email to complete login:");
-      }
-
-      try {
-        await signInWithEmailLink(auth, email, window.location.href);
-        window.localStorage.removeItem("emailForSignIn");
-        window.location.href = "https://itzatequila.wordpress.com";
-      } catch (error) {
-        console.error("Error during login:", error.message);
-        alert("Login failed: " + error.message);
-      }
-    }
-  </script>
+  <button onclick="sendAccessLink()">Send Access Link</button>
 </body>
 </html>
