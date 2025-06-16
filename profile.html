@@ -30,22 +30,15 @@
       margin-top: 20px;
     }
 
-    input {
-      padding: 10px;
-      border-radius: 4px;
-      border: none;
-      width: 220px;
-      margin-top: 10px;
+    #qr-reader {
+      width: 300px;
+      margin: 30px auto;
+      display: none;
     }
 
     #redeem-status {
       margin-top: 10px;
       font-size: 15px;
-    }
-
-    #qr-reader {
-      width: 300px;
-      margin: 30px auto 0 auto;
     }
   </style>
 
@@ -60,20 +53,9 @@
     <h2>Welcome, <span id="user-email"></span></h2>
     <p>You have <strong id="token-count">0</strong> tokens.</p>
 
-    <!-- Campo manual -->
-    <div style="margin-top: 40px;">
-      <p>Have a bottle code? Redeem it here:</p>
-      <input type="text" id="bottle-code" placeholder="Enter your code" />
-      <br>
-      <button onclick="redeemCode()">Redeem Code</button>
-      <p id="redeem-status"></p>
-    </div>
-
-    <!-- QR -->
-    <div style="margin-top: 40px;">
-      <p>Or scan your bottle QR code:</p>
-      <div id="qr-reader"></div>
-    </div>
+    <button onclick="startQR()">📷 Escanear código QR</button>
+    <div id="qr-reader"></div>
+    <p id="redeem-status"></p>
 
     <button onclick="logout()">Logout</button>
   </div>
@@ -96,7 +78,9 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Mostrar perfil solo si está logueado
+    let qrScanner = null;
+
+    // Mostrar perfil tras login
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -110,24 +94,20 @@
       const userSnap = await getDoc(userRef);
       const data = userSnap.exists() ? userSnap.data() : {};
       document.getElementById("token-count").textContent = data.tokens ?? 0;
-
-      startQRScanner(); // activar escáner
     });
 
-    // Función para canjear código manual o QR
-    window.redeemCode = async () => {
-      const codeInput = document.getElementById("bottle-code");
+    // Redimir código
+    async function redeemCode(code) {
       const status = document.getElementById("redeem-status");
-      const code = codeInput.value.trim().toUpperCase();
+      const user = auth.currentUser;
 
-      if (code !== "ITZA_001") {
-        status.textContent = "❌ Invalid code.";
+      if (!user) {
+        status.textContent = "❌ User not logged in.";
         return;
       }
 
-      const user = auth.currentUser;
-      if (!user) {
-        status.textContent = "❌ User not logged in.";
+      if (code.trim().toUpperCase() !== "ITZA_001") {
+        status.textContent = "❌ Código no válido.";
         return;
       }
 
@@ -137,38 +117,40 @@
         const currentTokens = userSnap.exists() ? (userSnap.data().tokens || 0) : 0;
 
         await setDoc(userRef, { tokens: currentTokens + 1 }, { merge: true });
-
         document.getElementById("token-count").textContent = currentTokens + 1;
-        status.textContent = "✅ Token added!";
-        codeInput.value = "";
+        status.textContent = "✅ Token añadido con éxito.";
       } catch (err) {
-        console.error("Error adding token:", err);
-        status.textContent = "⚠️ An error occurred. Try again.";
+        console.error("Error añadiendo token:", err);
+        status.textContent = "⚠️ Ocurrió un error. Inténtalo de nuevo.";
       }
-    };
+    }
 
-    // Escáner QR (usa cámara trasera)
-    function startQRScanner() {
-      const qrScanner = new Html5Qrcode("qr-reader");
+    // Iniciar QR
+    window.startQR = () => {
+      const qrRegion = document.getElementById("qr-reader");
+      qrRegion.style.display = "block";
+
+      if (qrScanner) return; // ya iniciado
+
+      qrScanner = new Html5Qrcode("qr-reader");
       const config = { fps: 10, qrbox: 250 };
 
       qrScanner.start(
         { facingMode: "environment" },
         config,
         async (decodedText) => {
-          qrScanner.stop(); // detener escáner al capturar
-          document.getElementById("bottle-code").value = decodedText;
-          await redeemCode();
+          await qrScanner.stop();
+          qrRegion.style.display = "none";
+          await redeemCode(decodedText);
         },
         (errorMessage) => {
-          // errores de lectura ignorados
+          // errores de escaneo ignorados
         }
       ).catch(err => {
         console.error("QR scanner error:", err);
-        document.getElementById("qr-reader").innerHTML =
-          "<p style='color:red'>Camera access denied or unavailable.</p>";
+        qrRegion.innerHTML = "<p style='color:red'>No se puede acceder a la cámara.</p>";
       });
-    }
+    };
 
     // Logout
     window.logout = async () => {
