@@ -4,12 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ITZA Login</title>
-  <script type="module">
-    // Importar Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    // Configuración de Firebase
+  <script type="module">
+    // Firebase imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      sendSignInLinkToEmail,
+      isSignInWithEmailLink,
+      signInWithEmailLink,
+      setPersistence,
+      browserLocalPersistence
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
       authDomain: "itza-verification.firebaseapp.com",
@@ -23,41 +31,47 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
 
-    // Configuración del enlace mágico
-    const actionCodeSettings = {
-      url: "https://itza-login.vercel.app/login.html",  // ✅ importante: debe coincidir con la URL de origen del login
-      handleCodeInApp: true
-    };
+    // Establecer persistencia de sesión local
+    setPersistence(auth, browserLocalPersistence).then(() => {
+      // Configuración para el email link
+      const actionCodeSettings = {
+        url: "https://itza-login.vercel.app/login.html",
+        handleCodeInApp: true
+      };
 
-    // Función para enviar el enlace de acceso
-    window.sendAccessLink = async function () {
-      const email = document.getElementById("email").value;
-      if (!email) return alert("Please enter a valid email.");
-      try {
-        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-        window.localStorage.setItem("emailForSignIn", email);
-        alert("Access link sent. Please check your email.");
-      } catch (error) {
-        alert("Error: " + error.message);
-      }
-    };
-
-    // Función para procesar el acceso desde el enlace
-    window.onload = async function () {
-      if (isSignInWithEmailLink(auth, window.location.href)) {
-        let email = window.localStorage.getItem("emailForSignIn");
-        if (!email) {
-          email = window.prompt("Please enter your email again to confirm:");
-        }
+      // Enviar enlace
+      window.sendAccessLink = async function () {
+        const email = document.getElementById("email").value;
+        if (!email) return alert("Please enter a valid email.");
         try {
-          await signInWithEmailLink(auth, email, window.location.href);
-          window.localStorage.removeItem("emailForSignIn");
-          window.location.href = "/dashboard.html"; // ✅ redirige al dashboard
+          await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+          window.localStorage.setItem("emailForSignIn", email);
+          alert("Access link sent. Please check your email.");
         } catch (error) {
-          alert("Login failed: " + error.message);
+          alert("Error: " + error.message);
         }
-      }
-    };
+      };
+
+      // Procesar autenticación desde el email
+      window.onload = async function () {
+        if (isSignInWithEmailLink(auth, window.location.href)) {
+          let email = window.localStorage.getItem("emailForSignIn");
+          if (!email) {
+            email = window.prompt("Please enter your email again to confirm:");
+          }
+          try {
+            await signInWithEmailLink(auth, email, window.location.href);
+            window.localStorage.removeItem("emailForSignIn");
+            window.location.href = "/dashboard.html";
+          } catch (error) {
+            alert("Login failed: " + error.message);
+          }
+        }
+      };
+
+    }).catch((error) => {
+      console.error("Error setting persistence:", error);
+    });
   </script>
 
   <style>
