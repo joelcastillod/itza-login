@@ -71,7 +71,6 @@
 
   <button onclick="logout()">Logout</button>
 
-  <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -96,8 +95,10 @@
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
+        // Usuario autenticado: mostramos dashboard
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
+
         if (docSnap.exists()) {
           const data = docSnap.data();
           const tokens = data.tokens || 0;
@@ -107,7 +108,7 @@
           tokenCountElement.textContent = "0 tokens registered";
         }
 
-        // QR Scanner
+        // Iniciar lector QR
         const qrReader = document.getElementById("qr-reader");
         const scanner = new QrScanner(qrReader, async result => {
           scanner.stop();
@@ -121,13 +122,14 @@
         scanner.start();
 
       } else {
-        window.location.href = "/login.html";
+        // Usuario NO autenticado: redirigir a login
+        window.location.href = "https://itza-login.vercel.app/login.html";
       }
     });
 
     window.logout = function () {
       signOut(auth).then(() => {
-        window.location.href = "/login.html";
+        window.location.href = "https://itza-login.vercel.app/login.html";
       });
     };
   </script>
