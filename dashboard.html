@@ -32,7 +32,11 @@
     }
     #qr-reader {
       width: 300px;
+      height: auto;
       margin: 20px auto;
+      border-radius: 12px;
+      background: #000;
+      display: block;
     }
     button {
       padding: 12px 28px;
@@ -62,7 +66,7 @@
 
   <div>
     <h2>Scan your bottle</h2>
-    <div id="qr-reader"></div>
+    <video id="qr-reader"></video>
   </div>
 
   <button onclick="logout()">Logout</button>
