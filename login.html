@@ -4,20 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ITZA Login</title>
-
   <script type="module">
-    // Firebase imports
+    // Importar Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getAuth,
-      sendSignInLinkToEmail,
-      isSignInWithEmailLink,
-      signInWithEmailLink,
-      setPersistence,
-      browserLocalPersistence
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    // Firebase config
+    // Configuración de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
       authDomain: "itza-verification.firebaseapp.com",
@@ -31,47 +23,41 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
 
-    // Establecer persistencia de sesión local
-    setPersistence(auth, browserLocalPersistence).then(() => {
-      // Configuración para el email link
-      const actionCodeSettings = {
-        url: "https://itza-login.vercel.app/login.html",
-        handleCodeInApp: true
-      };
+    // Configuración para el enlace de acceso (pon aquí la URL de tu dashboard)
+    const actionCodeSettings = {
+      url: "https://itza-dashboard.vercel.app", // Cambia esta URL por la de tu dashboard real
+      handleCodeInApp: true
+    };
 
-      // Enviar enlace
-      window.sendAccessLink = async function () {
-        const email = document.getElementById("email").value;
-        if (!email) return alert("Please enter a valid email.");
+    // Enviar enlace de acceso
+    window.sendAccessLink = async function () {
+      const email = document.getElementById("email").value;
+      if (!email) return alert("Please enter a valid email.");
+      try {
+        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+        window.localStorage.setItem("emailForSignIn", email);
+        alert("Access link sent. Please check your email.");
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    };
+
+    // Autenticación desde el enlace recibido y redirección al dashboard
+    window.onload = async function () {
+      if (isSignInWithEmailLink(auth, window.location.href)) {
+        let email = window.localStorage.getItem("emailForSignIn");
+        if (!email) {
+          email = window.prompt("Please enter your email again to confirm:");
+        }
         try {
-          await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-          window.localStorage.setItem("emailForSignIn", email);
-          alert("Access link sent. Please check your email.");
+          await signInWithEmailLink(auth, email, window.location.href);
+          window.localStorage.removeItem("emailForSignIn");
+          window.location.href = "https://itza-dashboard.vercel.app"; // Redirige al dashboard tras login
         } catch (error) {
-          alert("Error: " + error.message);
+          alert("Login failed: " + error.message);
         }
-      };
-
-      // Procesar autenticación desde el email
-      window.onload = async function () {
-        if (isSignInWithEmailLink(auth, window.location.href)) {
-          let email = window.localStorage.getItem("emailForSignIn");
-          if (!email) {
-            email = window.prompt("Please enter your email again to confirm:");
-          }
-          try {
-            await signInWithEmailLink(auth, email, window.location.href);
-            window.localStorage.removeItem("emailForSignIn");
-            window.location.href = "/dashboard.html";
-          } catch (error) {
-            alert("Login failed: " + error.message);
-          }
-        }
-      };
-
-    }).catch((error) => {
-      console.error("Error setting persistence:", error);
-    });
+      }
+    };
   </script>
 
   <style>
