@@ -13,6 +13,14 @@
       padding: 40px;
       text-align: center;
     }
+    #loader {
+      font-size: 18px;
+      margin-top: 100px;
+      color: #A89975;
+    }
+    #content {
+      display: none;
+    }
     h1 {
       font-size: 28px;
       margin-bottom: 10px;
@@ -56,20 +64,24 @@
 </head>
 <body>
 
-  <h1>Welcome to your ITZA account</h1>
-  <p>Your personal space to track your bottles and tokens</p>
+  <div id="loader">Loading your ITZA account...</div>
 
-  <div class="token-box">
-    <h2>Your Tokens</h2>
-    <p id="token-count">Loading...</p>
+  <div id="content">
+    <h1>Welcome to your ITZA account</h1>
+    <p>Your personal space to track your bottles and tokens</p>
+
+    <div class="token-box">
+      <h2>Your Tokens</h2>
+      <p id="token-count">Loading...</p>
+    </div>
+
+    <div>
+      <h2>Scan your bottle</h2>
+      <video id="qr-reader"></video>
+    </div>
+
+    <button onclick="logout()">Logout</button>
   </div>
-
-  <div>
-    <h2>Scan your bottle</h2>
-    <video id="qr-reader"></video>
-  </div>
-
-  <button onclick="logout()">Logout</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -92,13 +104,16 @@
     const db = getFirestore(app);
 
     const tokenCountElement = document.getElementById("token-count");
+    const loader = document.getElementById("loader");
+    const content = document.getElementById("content");
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Usuario autenticado: mostramos dashboard
+        loader.style.display = "none";
+        content.style.display = "block";
+
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
-
         if (docSnap.exists()) {
           const data = docSnap.data();
           const tokens = data.tokens || 0;
@@ -108,7 +123,7 @@
           tokenCountElement.textContent = "0 tokens registered";
         }
 
-        // Iniciar lector QR
+        // Inicializar lector QR
         const qrReader = document.getElementById("qr-reader");
         const scanner = new QrScanner(qrReader, async result => {
           scanner.stop();
@@ -122,14 +137,16 @@
         scanner.start();
 
       } else {
-        // Usuario NO autenticado: redirigir a login
-        window.location.href = "https://itza-login.vercel.app/login.html";
+        loader.textContent = "You are not authenticated. Redirecting to login...";
+        setTimeout(() => {
+          window.location.href = "/login.html";
+        }, 1500);
       }
     });
 
     window.logout = function () {
       signOut(auth).then(() => {
-        window.location.href = "https://itza-login.vercel.app/login.html";
+        window.location.href = "/login.html";
       });
     };
   </script>
