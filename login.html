@@ -22,7 +22,7 @@
     const auth = getAuth(app);
 
     const actionCodeSettings = {
-      url: "https://itza-login.vercel.app/dashboard.html",
+      url: "https://itza-login.vercel.app/dashboard.html", // URL dashboard real, debe coincidir con dominios autorizados Firebase
       handleCodeInApp: true
     };
 
@@ -38,15 +38,7 @@
       }
     };
 
-    // Observador global del estado de autenticación
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // Usuario autenticado, redirige automáticamente
-        window.location.href = "https://itza-login.vercel.app/dashboard.html";
-      }
-    });
-
-    // Procesar el enlace de autenticación si se entra con el link
+    // Al cargar la página, verifica si se accede desde el enlace de login
     window.onload = async function () {
       if (isSignInWithEmailLink(auth, window.location.href)) {
         let email = window.localStorage.getItem("emailForSignIn");
@@ -56,12 +48,19 @@
         try {
           await signInWithEmailLink(auth, email, window.location.href);
           window.localStorage.removeItem("emailForSignIn");
-          // No redirigir aquí, el onAuthStateChanged lo hará
+          // No redirigimos aquí porque onAuthStateChanged en dashboard lo hará
         } catch (error) {
           alert("Login failed: " + error.message);
         }
       }
     };
+
+    // Observador global que redirige si ya hay sesión activa
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = "https://itza-login.vercel.app/dashboard.html";
+      }
+    });
   </script>
 
   <style>
