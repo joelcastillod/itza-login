@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ITZA Login</title>
   <script type="module">
-    // Importar Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    // Configuración de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBS9JekydLfX7Vy8uL2KLI6YqEgYazYZO4",
       authDomain: "itza-verification.firebaseapp.com",
@@ -21,15 +19,13 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth();
+    const auth = getAuth(app);
 
-    // Configuración para el enlace de acceso (usa la URL correcta de tu dashboard)
     const actionCodeSettings = {
-      url: "https://itza-login.vercel.app/dashboard.html", // Cambia aquí la URL exacta de tu dashboard
+      url: "https://itza-login.vercel.app/dashboard.html", // Cambia si tu dashboard está en otra URL
       handleCodeInApp: true
     };
 
-    // Enviar enlace de acceso
     window.sendAccessLink = async function () {
       const email = document.getElementById("email").value;
       if (!email) return alert("Please enter a valid email.");
@@ -42,7 +38,6 @@
       }
     };
 
-    // Autenticación desde el enlace recibido y redirección al dashboard
     window.onload = async function () {
       if (isSignInWithEmailLink(auth, window.location.href)) {
         let email = window.localStorage.getItem("emailForSignIn");
@@ -52,7 +47,13 @@
         try {
           await signInWithEmailLink(auth, email, window.location.href);
           window.localStorage.removeItem("emailForSignIn");
-          window.location.href = "https://itza-login.vercel.app/dashboard.html"; // Redirige al dashboard tras login
+
+          // Esperamos a que Firebase confirme el usuario antes de redirigir
+          onAuthStateChanged(auth, (user) => {
+            if (user) {
+              window.location.href = "https://itza-login.vercel.app/dashboard.html";
+            }
+          });
         } catch (error) {
           alert("Login failed: " + error.message);
         }
@@ -72,12 +73,10 @@
       height: 100vh;
       margin: 0;
     }
-
     h1 {
       font-size: 24px;
       margin-bottom: 20px;
     }
-
     input {
       padding: 12px;
       font-size: 16px;
@@ -86,7 +85,6 @@
       border-radius: 6px;
       margin-bottom: 20px;
     }
-
     button {
       padding: 12px 30px;
       background-color: #5A4531;
@@ -96,7 +94,6 @@
       font-weight: bold;
       cursor: pointer;
     }
-
     button:hover {
       background-color: #3e2f22;
     }
