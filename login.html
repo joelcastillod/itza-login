@@ -23,9 +23,9 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
 
-    // Configuración para el enlace de acceso (pon aquí la URL de tu dashboard)
+    // Configuración para el enlace de acceso (usa la URL correcta de tu dashboard)
     const actionCodeSettings = {
-      url: "https://itza-dashboard.vercel.app", // Cambia esta URL por la de tu dashboard real
+      url: "https://itza-login.vercel.app/dashboard.html", // Cambia aquí la URL exacta de tu dashboard
       handleCodeInApp: true
     };
 
@@ -52,7 +52,7 @@
         try {
           await signInWithEmailLink(auth, email, window.location.href);
           window.localStorage.removeItem("emailForSignIn");
-          window.location.href = "https://itza-dashboard.vercel.app"; // Redirige al dashboard tras login
+          window.location.href = "https://itza-login.vercel.app/dashboard.html"; // Redirige al dashboard tras login
         } catch (error) {
           alert("Login failed: " + error.message);
         }
